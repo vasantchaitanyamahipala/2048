@@ -2,7 +2,7 @@ from player import Player
 import heapq
 
 class AStarPlayer(Player):
-    def __init__(self, game, heuristic_choiceit):
+    def __init__(self, game, heuristic_choice):
         self.game = game
         self.heuristic_function = self.get_heuristic(heuristic_choice)
 
