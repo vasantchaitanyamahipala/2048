@@ -2,17 +2,65 @@ from player import Player
 import heapq
 
 class AStarPlayer(Player):
-    def __init__(self, game):
+    def __init__(self, game, heuristic_choiceit -m):
         self.game = game
+        self.heuristic_function = self.get_heuristic(heuristic_choice)
 
-    def heuristic(self):
-        """Heuristic function: Minimize the number of empty tiles."""
-        return sum(tile == 0 for row in self.game.board for tile in row)
+    def get_heuristic(self, heuristic_choice):
+        """Select the heuristic function based on user input."""
+        heuristics = {
+            "empty_tiles": self.heuristic_empty_tiles,
+            "max_tile": self.heuristic_max_tile,
+            "monotonicity": self.heuristic_monotonicity,
+            "clustering": self.heuristic_clustering,
+        }
+        return heuristics.get(heuristic_choice, self.heuristic_empty_tiles)
+
+    def heuristic_empty_tiles(self, board):
+        """Heuristic: Number of empty tiles."""
+        return sum(tile == 0 for row in board for tile in row)
+
+    def heuristic_max_tile(self, board):
+        """Heuristic: Maximum tile value."""
+        return max(tile for row in board for tile in row)
+
+    def heuristic_monotonicity(self, board):
+        """Heuristic: Penalize non-monotonic sequences."""
+        penalty = 0
+        for row in board:
+            for i in range(len(row) - 1):
+                if row[i] > row[i + 1]:
+                    penalty += 1
+        return penalty
+
+    def heuristic_clustering(self, board):
+        """Heuristic: Penalize large tiles being far apart."""
+        penalty = 0
+        for i in range(len(board)):
+            for j in range(len(board[i])):
+                if board[i][j] > 0:
+                    neighbors = self.get_neighbors(board, i, j)
+                    penalty += sum(abs(board[i][j] - n) for n in neighbors)
+        return penalty
+
+    def get_neighbors(self, board, i, j):
+        """Get the neighbors of a tile at position (i, j)."""
+        neighbors = []
+        if i > 0:
+            neighbors.append(board[i - 1][j])
+        if i < len(board) - 1:
+            neighbors.append(board[i + 1][j])
+        if j > 0:
+            neighbors.append(board[i][j - 1])
+        if j < len(board[i]) - 1:
+            neighbors.append(board[i][j + 1])
+        return neighbors
 
     def astar(self):
         """Perform A* search to find the best move."""
         priority_queue = []
-        heapq.heappush(priority_queue, (self.heuristic(), self.game.board, self.game.score, []))
+        initial_heuristic = self.heuristic_function(self.game.board)
+        heapq.heappush(priority_queue, (initial_heuristic, self.game.board, self.game.score, []))
         best_score = self.game.score
         best_moves = []
 
@@ -39,9 +87,10 @@ class AStarPlayer(Player):
                 move_func()
 
                 if self.game.board != temp_board:
+                    heuristic_value = self.heuristic_function(self.game.board)
                     heapq.heappush(
                         priority_queue,
-                        (self.heuristic(), self.game.board, self.game.score, moves + [move_name])
+                        (heuristic_value, self.game.board, self.game.score, moves + [move_name])
                     )
 
                 self.game.board = temp_board

@@ -7,55 +7,76 @@ from astar_ai import AStarPlayer
 
 pygame.init()
 
-def run_game(player_type):
+def get_all_heuristics():
+    """Return a dictionary of all available heuristics for A*."""
+    return {
+        "Empty Tiles": "empty_tiles",
+        "Max Tile": "max_tile",
+        "Monotonicity": "monotonicity",
+        "Clustering": "clustering"
+    }
+
+def run_game(player_type, heuristic=None):
     """Run a single game using the specified AI strategy and return the final score."""
     game = Game2048()
-    player = player_type(game)  # Instantiate the strategy dynamically
+    
+    # Instantiate the strategy dynamically, including heuristic choice for A*
+    if heuristic:
+        player = player_type(game, heuristic)
+    else:
+        player = player_type(game)
 
     while not game.is_game_over():
         best_move = player.get_best_move()
 
-        # Validate that the move is valid
         if best_move in ["left", "right", "up", "down"]:
             getattr(game, f"move_{best_move}")()  # Execute the valid move
         else:
-            print(f"Invalid move: {best_move}")  # Debugging log
+            print(f"Invalid move: {best_move}")
             break  # Stop if an invalid move is returned
 
     return game.score  # Return the final score
 
 def run_all_strategies(runs_per_strategy):
-    """Run BFS, DFS, and A* strategies multiple times and calculate the average score."""
+    """Run BFS, DFS, and all A* heuristics multiple times and calculate the average score."""
     strategies = {
         "BFS": BFSPlayer,
-        "DFS": DFSPlayer,
-        "A*": AStarPlayer
+        "DFS": DFSPlayer
     }
 
-    total_scores = {name: 0 for name in strategies}  # Store the total score for each strategy
-    results = {name: [] for name in strategies}  # Store individual run scores for reference
+    heuristics = get_all_heuristics()  # Get all A* heuristics
+    total_scores = {name: 0 for name in strategies}
+    total_scores.update({f"A* ({h})": 0 for h in heuristics})  # Track scores for all heuristics
+    results = {name: [] for name in strategies}
+    results.update({f"A* ({h})": [] for h in heuristics})
 
-    # Run each strategy the specified number of times
+    # Run BFS and DFS strategies
     for name, strategy in strategies.items():
         for i in range(runs_per_strategy):
             print(f"Running {name} Strategy - Run {i + 1}")
             score = run_game(strategy)
-            total_scores[name] += score  # Accumulate the total score
-            results[name].append(score)  # Store individual score
+            total_scores[name] += score
+            results[name].append(score)
             print(f"Result: {name} - Run {i + 1} - Final Score: {score}")
-    # Print all individual results
+
+    # Run A* strategy for each heuristic
+    for heuristic_name, heuristic_key in heuristics.items():
+        for i in range(runs_per_strategy):
+            print(f"Running A* ({heuristic_name}) - Run {i + 1}")
+            score = run_game(AStarPlayer, heuristic_key)
+            total_scores[f"A* ({heuristic_name})"] += score
+            results[f"A* ({heuristic_name})"].append(score)
+            print(f"Result: A* ({heuristic_name}) - Run {i + 1} - Final Score: {score}")
+
     print("\nAll Results:")
     for name, scores in results.items():
         for i, score in enumerate(scores, 1):
             print(f"{name} - Run {i}: Final Score = {score}")
 
-    # Calculate and print the average score for each strategy
     print("\nAverage Scores:")
     for name, total in total_scores.items():
         average_score = total / runs_per_strategy
         print(f"{name}: Average Score = {average_score:.2f}")
-
-
 
 def get_runs_per_strategy():
     """Prompt the user to enter the number of runs per strategy."""
@@ -70,12 +91,7 @@ def get_runs_per_strategy():
             print("Invalid input. Please enter a valid integer.")
 
 if __name__ == "__main__":
-    # Get the number of runs per strategy from the user
     runs_per_strategy = get_runs_per_strategy()
-    
-    # Run all strategies the specified number of times
     run_all_strategies(runs_per_strategy)
-    
-    # Quit Pygame and exit
     pygame.quit()
     sys.exit()
