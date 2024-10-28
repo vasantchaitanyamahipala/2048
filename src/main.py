@@ -59,7 +59,6 @@ def run_game(player_type):
 
         # Check for game over
         if game.is_game_over():
-            print(game.is_game_over())
             print(f"Game Over! Final Score: {game.score}")
             pygame.quit()
             sys.exit()  # Ensure the program exits after printing the score
@@ -67,7 +66,7 @@ def run_game(player_type):
         clock.tick(0.5)  # Control the speed of AI moves
 
 def select_player():
-    """Prompt the user to select a player strategy."""
+    """Prompt the user to select a player strategy and heuristic."""
     while True:
         choice = input("Select AI strategy (bfs/dfs/astar): ").strip().lower()
         if choice == "bfs":
@@ -75,11 +74,32 @@ def select_player():
         elif choice == "dfs":
             return DFSPlayer
         elif choice == "astar":
-            return AStarPlayer
+            heuristic = select_astar_heuristic()
+            return lambda game: AStarPlayer(game, heuristic_choice=heuristic)
         else:
             print("Invalid choice. Please enter 'bfs', 'dfs', or 'astar'.")
 
+def select_astar_heuristic():
+    """Prompt the user to select a heuristic for A* strategy."""
+    while True:
+        print("Select A* heuristic:")
+        print("1. Empty Tiles")
+        print("2. Max Tile")
+        print("3. Monotonicity")
+        print("4. Clustering")
+        choice = input("Enter the number of your choice: ").strip()
+        if choice == "1":
+            return "empty_tiles"
+        elif choice == "2":
+            return "max_tile"
+        elif choice == "3":
+            return "monotonicity"
+        elif choice == "4":
+            return "clustering"
+        else:
+            print("Invalid choice. Please enter 1, 2, 3, or 4.")
+
 if __name__ == "__main__":
-    # Get user input to select the strategy
+    # Get user input to select the strategy and run the game
     player_type = select_player()
     run_game(player_type)

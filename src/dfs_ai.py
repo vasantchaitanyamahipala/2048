@@ -40,4 +40,4 @@ class DFSPlayer(Player):
 
     def get_best_move(self):
         """Return the best move using DFS."""
-        return self.dfs(3)  # Search depth 3
+        return self.dfs(3)  # Search depth 6
