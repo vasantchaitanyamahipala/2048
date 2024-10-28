@@ -44,6 +44,8 @@ def run_game(player_type):
 
     clock = pygame.time.Clock()
 
+    valid_moves = {"left", "right", "up", "down"}  # Set of valid move names
+
     while True:
         draw_board(screen, game)
 
@@ -54,8 +56,10 @@ def run_game(player_type):
 
         # AI makes a move
         best_move = player.get_best_move()
-        if best_move:
-            getattr(game, f"move_{best_move}")()  # Execute the best move
+        if best_move in valid_moves:  # Ensure the move is valid
+            getattr(game, f"move_{best_move}")()  # Execute the valid move
+        else:
+            print(f"Invalid move detected: {best_move}")  # Debugging print
 
         # Check for game over
         if game.is_game_over():
@@ -63,7 +67,8 @@ def run_game(player_type):
             pygame.quit()
             sys.exit()  # Ensure the program exits after printing the score
 
-        clock.tick(0.5)  # Control the speed of AI moves
+        clock.tick(1)  # Control the speed of AI moves
+
 
 def select_player():
     """Prompt the user to select a player strategy and heuristic."""
